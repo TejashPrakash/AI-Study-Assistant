@@ -7,12 +7,73 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("📚 AI Study Assistant")
+# ---------------- Sidebar ---------------- #
 
-question = st.text_input("Ask me anything")
+with st.sidebar:
+    st.title("📚 AI Study Assistant")
 
-if st.button("Ask AI"):
-    if question:
+    st.markdown("---")
+
+    if st.button("🗑️ Clear Chat"):
+        st.session_state.messages = []
+        st.rerun()
+
+    st.markdown("---")
+
+    st.info(
+        """
+        **Features**
+
+        ✅ AI Chat
+
+        🚧 PDF Chat
+
+        🚧 Quiz Generator
+
+        🚧 Flashcards
+
+        🚧 Notes Generator
+        """
+    )
+
+# ------------ Chat History ------------ #
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+st.title("💬 AI Chat")
+
+# Display previous messages
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# Chat Input
+prompt = st.chat_input("Ask anything...")
+
+if prompt:
+
+    st.session_state.messages.append(
+        {
+            "role": "user",
+            "content": prompt
+        }
+    )
+
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    with st.chat_message("assistant"):
+
         with st.spinner("Thinking..."):
-            answer = ask_gemini(question)
-            st.success(answer)
+
+            answer = ask_gemini(prompt)
+
+            st.markdown(answer)
+
+    st.session_state.messages.append(
+        {
+            "role": "assistant",
+            "content": answer
+        }
+    )
