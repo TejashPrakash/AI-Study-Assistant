@@ -73,7 +73,6 @@ if uploaded_file:
 
                     st.write("Number of chunks:", len(chunks))
 
-                    st.write(chunks[:2])
 
     if pdf_text:
         st.success("PDF loaded successfully!")
