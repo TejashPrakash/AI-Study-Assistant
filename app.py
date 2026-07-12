@@ -1,6 +1,7 @@
 import streamlit as st
 from src.chatbot import ask_gemini
 from src.pdf_loader import extract_text_from_pdf
+from src.text_splitter import split_text
 
 st.set_page_config(
     page_title="AI Study Assistant",
@@ -59,7 +60,20 @@ pdf_text = None
 
 if uploaded_file:
     with st.spinner("Reading PDF..."):
-        pdf_text = extract_text_from_pdf(uploaded_file)
+       pdf_text = None
+       chunks = []
+
+       if uploaded_file:
+            with st.spinner("Reading PDF..."):
+                pdf_text = extract_text_from_pdf(uploaded_file)
+
+                if pdf_text:
+                    chunks = split_text(pdf_text)
+                    st.write("Length of extracted text:", len(pdf_text))
+
+                    st.write("Number of chunks:", len(chunks))
+
+                    st.write(chunks[:2])
 
     if pdf_text:
         st.success("PDF loaded successfully!")
@@ -99,8 +113,12 @@ if prompt:
 
 if pdf_text:
 
-    with st.expander("View Extracted Text"):
+    st.write(f"📄 Number of Chunks: {len(chunks)}")
 
+    with st.expander("Chunk 1"):
+        st.write(chunks[0])
+
+    with st.expander("View Extracted Text"):
         st.text_area(
             "Extracted Text",
             pdf_text,
