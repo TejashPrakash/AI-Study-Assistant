@@ -1,5 +1,6 @@
 import streamlit as st
 from src.chatbot import ask_gemini
+from src.pdf_loader import extract_text_from_pdf
 
 st.set_page_config(
     page_title="AI Study Assistant",
@@ -35,6 +36,12 @@ with st.sidebar:
         🚧 Notes Generator
         """
     )
+    st.markdown("---")
+
+    uploaded_file = st.file_uploader(
+        "Upload your PDF",
+        type="pdf"
+    )
 
 # ------------ Chat History ------------ #
 
@@ -47,6 +54,18 @@ st.title("💬 AI Chat")
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
+
+pdf_text = None
+
+if uploaded_file:
+    with st.spinner("Reading PDF..."):
+        pdf_text = extract_text_from_pdf(uploaded_file)
+
+    if pdf_text:
+        st.success("PDF loaded successfully!")
+    else:
+        st.warning("No readable text found in the PDF.")
+
 
 # Chat Input
 prompt = st.chat_input("Ask anything...")
@@ -77,3 +96,13 @@ if prompt:
             "content": answer
         }
     )
+
+if pdf_text:
+
+    with st.expander("View Extracted Text"):
+
+        st.text_area(
+            "Extracted Text",
+            pdf_text,
+            height=500
+        )
