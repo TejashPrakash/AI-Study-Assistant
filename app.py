@@ -2,6 +2,7 @@ import streamlit as st
 from src.chatbot import ask_gemini
 from src.pdf_loader import extract_text_from_pdf
 from src.text_splitter import split_text
+from src.embeddings import create_embeddings
 
 st.set_page_config(
     page_title="AI Study Assistant",
@@ -69,10 +70,10 @@ if uploaded_file:
 
                 if pdf_text:
                     chunks = split_text(pdf_text)
-                    st.write("Length of extracted text:", len(pdf_text))
-
-                    st.write("Number of chunks:", len(chunks))
-
+                    embeddings = create_embeddings(chunks)
+                    st.write(f"📄 Number of Chunks: {len(chunks)}")
+                    st.write(f"🧠 Number of Embeddings: {len(embeddings)}")
+                    st.write(f"📐 Embedding Dimension: {len(embeddings[0])}")
 
     if pdf_text:
         st.success("PDF loaded successfully!")
