@@ -1,9 +1,12 @@
 import streamlit as st
+
 from src.chatbot import ask_gemini
 from src.pdf_loader import extract_text_from_pdf
 from src.text_splitter import split_text
-from src.embeddings import create_embeddings
-from src.vector_store import store_chunks
+from src.embeddings import create_embeddings, create_query_embedding
+from src.vector_store import store_chunks, search
+from src.pdf_utils import get_pdf_hash
+from src.cache_manager import pdf_exists, add_pdf
 
 st.set_page_config(
     page_title="AI Study Assistant",
@@ -14,6 +17,7 @@ st.set_page_config(
 # ---------------- Sidebar ---------------- #
 
 with st.sidebar:
+
     st.title("📚 AI Study Assistant")
 
     st.markdown("---")
@@ -24,21 +28,20 @@ with st.sidebar:
 
     st.markdown("---")
 
-    st.info(
-        """
-        **Features**
+    st.info("""
+**Features**
 
-        ✅ AI Chat
+✅ AI Chat
 
-        🚧 PDF Chat
+✅ PDF Chat (RAG)
 
-        🚧 Quiz Generator
+🚧 Quiz Generator
 
-        🚧 Flashcards
+🚧 Flashcards
 
-        🚧 Notes Generator
-        """
-    )
+🚧 Notes Generator
+""")
+
     st.markdown("---")
 
     uploaded_file = st.file_uploader(
@@ -46,45 +49,52 @@ with st.sidebar:
         type="pdf"
     )
 
-# ------------ Chat History ------------ #
+# ---------------- Chat History ---------------- #
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 st.title("💬 AI Chat")
 
-# Display previous messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
 pdf_text = None
+chunks = []
+
+# ---------------- PDF Processing ---------------- #
 
 if uploaded_file:
-    with st.spinner("Reading PDF..."):
-       pdf_text = None
-       chunks = []
 
-       if uploaded_file:
-            with st.spinner("Reading PDF..."):
-                pdf_text = extract_text_from_pdf(uploaded_file)
+    pdf_hash = get_pdf_hash(uploaded_file)
 
-                if pdf_text:
-                    chunks = split_text(pdf_text)
-                    embeddings = create_embeddings(chunks)
-                    store_chunks(chunks, embeddings)
-                    st.write(f"📄 Number of Chunks: {len(chunks)}")
-                    st.write(f"🧠 Number of Embeddings: {len(embeddings)}")
-                    st.write(f"📐 Embedding Dimension: {len(embeddings[0])}")
-                    st.success("Embeddings stored in ChromaDB!")
+    if not pdf_exists(pdf_hash):
 
-    if pdf_text:
-        st.success("PDF loaded successfully!")
+        with st.spinner("Processing PDF for the first time..."):
+
+            pdf_text = extract_text_from_pdf(uploaded_file)
+
+            chunks = split_text(pdf_text)
+
+            embeddings = create_embeddings(chunks)
+
+            store_chunks(chunks, embeddings)
+
+            add_pdf(pdf_hash)
+
+            st.success("PDF Indexed Successfully!")
+
     else:
-        st.warning("No readable text found in the PDF.")
 
+        st.success("✅ PDF already indexed.")
 
-# Chat Input
+        pdf_text = extract_text_from_pdf(uploaded_file)
+
+        chunks = split_text(pdf_text)
+
+# ---------------- Chat ---------------- #
+
 prompt = st.chat_input("Ask anything...")
 
 if prompt:
@@ -103,7 +113,38 @@ if prompt:
 
         with st.spinner("Thinking..."):
 
-            answer = ask_gemini(prompt)
+            query_embedding = create_query_embedding(prompt)
+
+            results = search(query_embedding)
+
+            documents = results["documents"]
+            distances = results["distances"]
+
+            # Debug
+
+            with st.expander("Retrieved Chunks"):
+
+                for i, chunk in enumerate(documents):
+
+                    st.write(f"### Chunk {i+1}")
+
+                    st.write(chunk[:500])
+
+                    st.write(f"Distance : {distances[i]}")
+
+            # Lower distance = better match
+
+            BEST_DISTANCE = distances[0]
+
+            if BEST_DISTANCE > 1.2:
+
+                answer = "❌ I could not find that information in the uploaded PDF."
+
+            else:
+
+                context = "\n\n".join(documents)
+
+                answer = ask_gemini(prompt, context)
 
             st.markdown(answer)
 
@@ -114,14 +155,12 @@ if prompt:
         }
     )
 
+# ---------------- PDF Preview ---------------- #
+
 if pdf_text:
 
-    st.write(f"📄 Number of Chunks: {len(chunks)}")
-
-    with st.expander("Chunk 1"):
-        st.write(chunks[0])
-
     with st.expander("View Extracted Text"):
+
         st.text_area(
             "Extracted Text",
             pdf_text,

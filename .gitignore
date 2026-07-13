@@ -1,18 +1,30 @@
-# Virtual Environment
-.venv/
-
-# Environment Variables
+# Environment
 .env
 
-# Python Cache
+# Python
 __pycache__/
 *.pyc
 
-# VS Code
+# Virtual Environments
+.venv/
+venv/
+env/
+ai-study/
+
+# ChromaDB
+database/
+
+# Uploaded PDFs
+data/uploads/
+
+# Cache
+data/cache/
+
+# Generated Files
+data/generated/
+
+# IDE
 .vscode/
 
 # macOS
 .DS_Store
-
-#ChromaDB
-database/
