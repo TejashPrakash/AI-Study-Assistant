@@ -1,30 +1,56 @@
-# Environment
+# ===========================
+# Environment Variables
+# ===========================
 .env
 
+# ===========================
 # Python
+# ===========================
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 
+# ===========================
 # Virtual Environments
+# ===========================
 .venv/
 venv/
 env/
-ai-study/
 
+# Conda
+.conda/
+.condarc
+
+# ===========================
 # ChromaDB
+# ===========================
 database/
 
-# Uploaded PDFs
+# ===========================
+# Project Data
+# ===========================
 data/uploads/
-
-# Cache
 data/cache/
-
-# Generated Files
 data/generated/
 
+# ===========================
 # IDE
+# ===========================
 .vscode/
+.idea/
 
-# macOS
+# ===========================
+# Operating System
+# ===========================
 .DS_Store
+Thumbs.db
+
+# ===========================
+# Logs
+# ===========================
+*.log
+
+# ===========================
+# Streamlit Cache
+# ===========================
+.streamlit/secrets.toml
