@@ -2,6 +2,9 @@ import os
 import time
 from dotenv import load_dotenv
 from google import genai
+from src.prompt import CHATBOT_PROMPT
+from src.config import GEMINI_MODELS
+
 
 load_dotenv()
 
@@ -9,37 +12,16 @@ client = genai.Client(
     api_key=os.getenv("GEMINI_API_KEY")
 )
 
-
-MODELS = [
-    "gemini-3.5-flash",
-    "gemini-2.5-flash",
-    "gemini-2.0-flash"
-]
-
-
 def ask_gemini(question, context=""):
 
-    prompt = f"""
-You are an AI Study Assistant.
-
-Use ONLY the provided study material.
-
-Do NOT use outside knowledge.
-
-If the answer is not found in the study material, reply exactly:
-
-"I could not find that information in the uploaded PDF."
-
-Study Material:
-{context}
-
-Question:
-{question}
-"""
+    prompt = CHATBOT_PROMPT.format(
+    context=context,
+    question=question
+)
 
     last_error = None
 
-    for model_name in MODELS:
+    for model_name in GEMINI_MODELS:
 
         try:
 

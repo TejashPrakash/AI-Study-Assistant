@@ -54,3 +54,8 @@ Thumbs.db
 # Streamlit Cache
 # ===========================
 .streamlit/secrets.toml
+
+# ===========================
+# PDF Cache
+# ===========================
+pdf_cache.json
