@@ -10,6 +10,7 @@ from src.pdf_utils import get_pdf_hash
 from src.cache_manager import pdf_exists, add_pdf
 from src.config import TOP_K
 from src.utils.performance import Timer
+from src.services.notes_service import generate_notes
 
 # ===========================
 # Page Config
@@ -189,11 +190,7 @@ Upload a PDF anytime to enable AI-powered document chat.
 
                 with st.spinner("🔍 Searching your PDF..."):
 
-                    timer = Timer()
-
                     answer, documents, distances, found, performance = generate_chat_response(prompt)
-
-                    response_time = timer.elapsed()
 
                 with st.expander("🔍 Retrieved Chunks"):
 
@@ -268,9 +265,7 @@ elif feature == "📝 Notes":
 
             with st.spinner("📝 Generating Notes..."):
 
-                from src.services.notes_service import generate_notes
-
-                st.session_state.notes = generate_notes()
+                st.session_state.notes = generate_notes(pdf_text)
 
         if st.session_state.notes:
 

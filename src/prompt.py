@@ -1,4 +1,13 @@
-CHATBOT_PROMPT = """
+GENERAL_CHAT_PROMPT = """
+You are a helpful AI assistant.
+
+Answer the user's question clearly, accurately, and naturally.
+
+Question:
+{question}
+"""
+
+RAG_CHAT_PROMPT = """
 You are an AI Study Assistant.
 
 Answer ONLY using the provided study material.

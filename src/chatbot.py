@@ -2,7 +2,7 @@ import os
 import time
 from dotenv import load_dotenv
 from google import genai
-from src.prompt import CHATBOT_PROMPT
+from src.prompt import GENERAL_CHAT_PROMPT, RAG_CHAT_PROMPT
 from src.config import GEMINI_MODELS
 
 
@@ -14,10 +14,18 @@ client = genai.Client(
 
 def ask_gemini(question, context=""):
 
-    prompt = CHATBOT_PROMPT.format(
-    context=context,
-    question=question
-)
+    if context.strip():
+
+        prompt = RAG_CHAT_PROMPT.format(
+            context=context,
+            question=question
+        )
+
+    else:
+
+        prompt = GENERAL_CHAT_PROMPT.format(
+            question=question
+        )
 
     last_error = None
 
