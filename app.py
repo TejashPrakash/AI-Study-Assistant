@@ -1,5 +1,6 @@
 import streamlit as st
 
+from src.chatbot import ask_gemini
 from src.pdf_loader import extract_text_from_pdf
 from src.text_splitter import split_text
 from src.embeddings import create_embeddings
@@ -7,7 +8,8 @@ from src.vector_store import store_chunks
 from src.services.chat_service import generate_chat_response
 from src.pdf_utils import get_pdf_hash
 from src.cache_manager import pdf_exists, add_pdf
-from src.config import EMBEDDING_MODEL, TOP_K
+from src.config import TOP_K
+from src.utils.performance import Timer
 
 # ===========================
 # Page Config
@@ -25,6 +27,9 @@ st.set_page_config(
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+if "notes" not in st.session_state:
+    st.session_state.notes = None
 
 # ===========================
 # Sidebar
@@ -60,11 +65,12 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-    # Footer
     st.markdown("---")
+
     st.caption("📚 AI Study Assistant")
     st.caption("Developed by Tejash Prakash")
-    st.caption("Version 0.1.0")    
+    st.caption("Version 0.1.0")
+
 # ===========================
 # PDF Processing
 # ===========================
@@ -76,11 +82,11 @@ if uploaded_file:
 
     pdf_hash = get_pdf_hash(uploaded_file)
 
+    pdf_text = extract_text_from_pdf(uploaded_file)
+
     if not pdf_exists(pdf_hash):
 
         with st.spinner("📄 Processing PDF..."):
-
-            pdf_text = extract_text_from_pdf(uploaded_file)
 
             chunks = split_text(pdf_text)
 
@@ -94,21 +100,14 @@ if uploaded_file:
 
     else:
 
-        st.sidebar.success("✅ PDF Already Indexed")
-
-        pdf_text = extract_text_from_pdf(uploaded_file)
+        st.sidebar.success("⚡ PDF Already Indexed")
 
         chunks = split_text(pdf_text)
 
-    if chunks:
+    st.sidebar.markdown("---")
 
-        st.sidebar.markdown("---")
-
-        st.sidebar.metric("Chunks", len(chunks))
-
-        st.sidebar.metric("Embedding Model", EMBEDDING_MODEL)
-
-        st.sidebar.metric("Top K", TOP_K)
+    st.sidebar.metric("Chunks", len(chunks))
+    st.sidebar.metric("Top K", TOP_K)
 
 # ===========================
 # CHAT
@@ -121,73 +120,133 @@ if feature == "💬 Chat":
     if not uploaded_file:
 
         st.info("""
-### 👋 Welcome to AI Study Assistant
+# 👋 Welcome to AI Study Assistant
 
-Upload a PDF to begin.
+You can start chatting with AI immediately.
 
-You can:
+Upload a PDF anytime to enable AI-powered document chat.
 
-- 💬 Chat with your notes
-- 📝 Generate Notes
-- 🧠 Create Flashcards
-- ❓ Generate Quiz
-- 📅 Build Study Planner
-        """)
+### Features
 
-    else:
+✅ General AI Chat
 
-        # Chat History
+✅ Chat with PDF (RAG)
 
-        for message in st.session_state.messages:
+✅ AI Notes Generator
 
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+🚧 Flashcards
 
-        # Chat Input
+🚧 Quiz Generator
 
-        prompt = st.chat_input("Ask anything about your PDF...")
+🚧 Study Planner
+""")
 
-        if prompt:
+    # Chat History
 
-            st.session_state.messages.append(
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            )
+    for message in st.session_state.messages:
 
-            with st.chat_message("user"):
+        with st.chat_message(message["role"]):
 
-                st.markdown(prompt)
+            st.markdown(message["content"])
 
-            with st.chat_message("assistant"):
+    # Chat Input
 
-                with st.spinner("🔍 Searching relevant study material..."):
+    prompt = st.chat_input(
+        "Ask about your PDF..." if uploaded_file
+        else "Chat with AI..."
+    )
 
-                    answer, documents, distances, found = generate_chat_response(prompt)
+    if prompt:
 
-                    with st.expander("🔍 Debug Mode"):
+        st.session_state.messages.append(
+            {
+                "role": "user",
+                "content": prompt
+            }
+        )
 
-                        if documents:
+        with st.chat_message("user"):
 
-                            for i, chunk in enumerate(documents):
+            st.markdown(prompt)
 
-                                st.write(f"### Chunk {i+1}")
+        with st.chat_message("assistant"):
 
-                                st.write(chunk[:500])
+            # -----------------------
+            # General AI Chat
+            # -----------------------
 
-                                st.write(f"Distance: {distances[i]:.4f}")
+            if not uploaded_file:
 
-                st.markdown(answer)
+                with st.spinner("🤖 Thinking..."):
 
-            st.session_state.messages.append(
-                {
-                    "role": "assistant",
-                    "content": answer
-                }
-            )
+                    answer = ask_gemini(prompt)
 
-        with st.expander("📄 View Extracted Text"):
+            # -----------------------
+            # PDF Chat (RAG)
+            # -----------------------
+
+            else:
+
+                with st.spinner("🔍 Searching your PDF..."):
+
+                    timer = Timer()
+
+                    answer, documents, distances, found, performance = generate_chat_response(prompt)
+
+                    response_time = timer.elapsed()
+
+                with st.expander("🔍 Retrieved Chunks"):
+
+                    if documents:
+
+                        for i, chunk in enumerate(documents):
+
+                            st.markdown(f"### Chunk {i+1}")
+
+                            st.write(chunk[:500])
+
+                            st.caption(
+                                f"Distance: {distances[i]:.4f}"
+                            )
+
+                    else:
+
+                        st.write("No relevant chunks found.")
+                
+                with st.expander("⚡ Performance"):
+
+                    col1, col2, col3 = st.columns(3)
+
+                    with col1:
+                        st.metric(
+                            "Retrieval",
+                            f"{performance['retrieval']} s"
+                        )
+
+                    with col2:
+                        st.metric(
+                            "Gemini",
+                            f"{performance['gemini']} s"
+                        )
+
+                    with col3:
+                        st.metric(
+                            "Total",
+                            f"{performance['total']} s"
+                        )
+
+            st.markdown(answer)
+
+        st.session_state.messages.append(
+            {
+                "role": "assistant",
+                "content": answer
+            }
+        )
+
+    if uploaded_file:
+
+        with st.expander("📄 PDF Preview"):
 
             st.text_area(
                 "Extracted Text",
@@ -207,13 +266,13 @@ elif feature == "📝 Notes":
 
         if st.button("📝 Generate Notes"):
 
-            with st.spinner("Generating Notes..."):
+            with st.spinner("📝 Generating Notes..."):
 
                 from src.services.notes_service import generate_notes
 
-                st.session_state.notes = generate_notes(pdf_text)
+                st.session_state.notes = generate_notes()
 
-        if "notes" in st.session_state:
+        if st.session_state.notes:
 
             st.markdown(st.session_state.notes)
 

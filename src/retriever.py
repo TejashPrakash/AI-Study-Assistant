@@ -3,9 +3,14 @@ from src.vector_store import search
 from src.config import SIMILARITY_THRESHOLD
 
 
-def retrieve_context(question):
+def retrieve_context(question, top_k=3):
     """
     Retrieves the most relevant context from ChromaDB.
+
+    Args:
+        question (str): User query.
+        top_k (int): Number of chunks to retrieve.
+
     Returns:
         context (str)
         documents (list)
@@ -15,7 +20,10 @@ def retrieve_context(question):
 
     query_embedding = create_query_embedding(question)
 
-    results = search(query_embedding)
+    results = search(
+        query_embedding=query_embedding,
+        n_results=top_k
+    )
 
     documents = results["documents"]
     distances = results["distances"]

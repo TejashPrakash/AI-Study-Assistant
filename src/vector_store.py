@@ -1,22 +1,33 @@
 import chromadb
 import uuid
-from src.config import DATABASE_PATH
 
-client = chromadb.PersistentClient(path=DATABASE_PATH)
+from functools import lru_cache
+
+from src.config import DATABASE_PATH
 
 COLLECTION_NAME = "study_notes"
 
 
+@lru_cache(maxsize=1)
+def get_collection():
+
+    client = chromadb.PersistentClient(
+        path=DATABASE_PATH
+    )
+
+    return client.get_or_create_collection(
+        COLLECTION_NAME
+    )
+
+
 def store_chunks(chunks, embeddings):
 
-    try:
-        client.delete_collection(COLLECTION_NAME)
-    except:
-        pass
+    collection = get_collection()
 
-    collection = client.create_collection(COLLECTION_NAME)
-
-    ids = [str(uuid.uuid4()) for _ in chunks]
+    ids = [
+        str(uuid.uuid4())
+        for _ in chunks
+    ]
 
     collection.add(
         ids=ids,
@@ -27,7 +38,7 @@ def store_chunks(chunks, embeddings):
 
 def search(query_embedding, n_results=3):
 
-    collection = client.get_collection(COLLECTION_NAME)
+    collection = get_collection()
 
     results = collection.query(
         query_embeddings=[query_embedding.tolist()],

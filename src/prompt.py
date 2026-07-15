@@ -19,9 +19,9 @@ Question:
 NOTES_PROMPT = """
 You are an expert study assistant.
 
-Using ONLY the provided study material, generate well-structured study notes.
+Using ONLY the provided study material, generate comprehensive study notes.
 
-Organize the notes using these headings:
+Organize your response into these sections:
 
 # Chapter Summary
 
@@ -29,9 +29,31 @@ Organize the notes using these headings:
 
 # Key Points
 
-# Important Formulae (if any)
+# Formulae (if any)
+
+# Important Definitions
 
 # Exam Tips
+
+Study Material:
+
+{context}
+"""
+
+FLASHCARDS_PROMPT = """
+You are an expert teacher.
+
+Using ONLY the study material below, generate exactly 10 flashcards.
+
+Format the response exactly like this:
+
+Q: Question 1
+A: Answer 1
+
+Q: Question 2
+A: Answer 2
+
+Continue until Question 10.
 
 Study Material:
 
