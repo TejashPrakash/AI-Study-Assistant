@@ -70,17 +70,74 @@ Study Material:
 """
 
 QUIZ_PROMPT = """
-Generate a quiz from the following study material.
+You are an expert teacher.
+
+Using ONLY the study material below, generate exactly {num_questions} multiple-choice questions.
+
+Difficulty: {difficulty}
+
+Return ONLY valid JSON.
+
+Do NOT use markdown.
+
+Do NOT use ```json.
+
+Output format:
+
+[
+  {{
+    "question": "...",
+    "options": [
+      "...",
+      "...",
+      "...",
+      "..."
+    ],
+    "answer": "A",
+    "explanation": "..."
+  }}
+]
 
 Study Material:
-{text}
+
+{context}
 """
+PLANNER_PROMPT = """
+You are an expert study coach.
 
-FLASHCARD_PROMPT = """
-Generate flashcards from the following study material.
+Using ONLY the study material below, create a {days}-day study plan.
+
+The student can study {hours_per_day} hours per day.
+
+Return ONLY valid JSON.
+
+Do NOT include markdown.
+Do NOT include explanations.
+Do NOT wrap the JSON in ```.
+
+Output format:
+
+[
+  {{
+    "day": 1,
+    "topics": [
+      "Topic 1",
+      "Topic 2",
+      "Practice Questions"
+    ]
+  }},
+  {{
+    "day": 2,
+    "topics": [
+      "Topic 3",
+      "Revision"
+    ]
+  }}
+]
 
 Study Material:
-{text}
+
+{context}
 """
 
 SUMMARY_PROMPT = """
