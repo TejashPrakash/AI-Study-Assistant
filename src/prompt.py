@@ -54,19 +54,19 @@ You are an expert teacher.
 
 Using ONLY the study material below, generate exactly 10 flashcards.
 
-Format the response exactly like this:
+Format EXACTLY like this:
 
-Q: Question 1
-A: Answer 1
+Q: What is ...
+A: ...
 
-Q: Question 2
-A: Answer 2
+Q: What is ...
+A: ...
 
-Continue until Question 10.
+Continue until you have generated 10 flashcards.
 
 Study Material:
 
-{text}
+{context}
 """
 
 QUIZ_PROMPT = """

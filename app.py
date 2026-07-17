@@ -1,13 +1,13 @@
 import streamlit as st
 
 from src.chatbot import ask_gemini
-from src.pdf_loader import extract_text_from_pdf
-from src.text_splitter import split_text
+from src.utils.pdf_loader import extract_text_from_pdf
+from src.utils.text_splitter import split_text
 from src.embeddings import create_embeddings
 from src.vector_store import store_chunks
 from src.services.chat_service import generate_chat_response
-from src.pdf_utils import get_pdf_hash
-from src.cache_manager import pdf_exists, add_pdf
+from src.utils.pdf_utils import get_pdf_hash
+from src.utils.cache_manager import pdf_exists, add_pdf
 from src.config import TOP_K
 from src.utils.performance import Timer
 from src.services.notes_service import generate_notes
@@ -288,9 +288,81 @@ elif feature == "📝 Notes":
 
 elif feature == "🧠 Flashcards":
 
+    from src.services.flashcards_service import generate_flashcards
+
     st.title("🧠 Flashcards")
 
-    st.info("🚧 Coming Soon")
+    if not uploaded_file:
+
+        st.warning("Please upload a PDF first.")
+
+    else:
+
+        if "flashcards" not in st.session_state:
+            st.session_state.flashcards = []
+
+        if "current_card" not in st.session_state:
+            st.session_state.current_card = 0
+
+        if "show_answer" not in st.session_state:
+            st.session_state.show_answer = False
+
+        if st.button("🧠 Generate Flashcards"):
+
+            with st.spinner("Generating Flashcards..."):
+
+                st.session_state.flashcards = generate_flashcards(pdf_text)
+
+                st.session_state.current_card = 0
+                st.session_state.show_answer = False
+
+        if st.session_state.flashcards:
+
+            flashcards = st.session_state.flashcards
+
+            card = flashcards[st.session_state.current_card]
+
+            st.progress(
+                (st.session_state.current_card + 1) / len(flashcards)
+            )
+
+            st.subheader(
+                f"Card {st.session_state.current_card + 1} / {len(flashcards)}"
+            )
+
+            st.markdown("### ❓ Question")
+            st.info(card["question"])
+
+            if st.button("👀 Show Answer"):
+
+                st.session_state.show_answer = True
+
+            if st.session_state.show_answer:
+
+                st.markdown("### ✅ Answer")
+                st.success(card["answer"])
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+
+                if st.button("⬅ Previous"):
+
+                    if st.session_state.current_card > 0:
+
+                        st.session_state.current_card -= 1
+                        st.session_state.show_answer = False
+                        st.rerun()
+
+            with col2:
+
+                if st.button("Next ➡"):
+
+                    if st.session_state.current_card < len(flashcards) - 1:
+
+                        st.session_state.current_card += 1
+                        st.session_state.show_answer = False
+                        st.rerun()
 
 # ===========================
 # QUIZ

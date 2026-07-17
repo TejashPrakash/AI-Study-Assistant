@@ -2,15 +2,24 @@ import os
 import time
 from dotenv import load_dotenv
 from google import genai
-from src.prompt import GENERAL_CHAT_PROMPT, RAG_CHAT_PROMPT
-from src.config import GEMINI_MODELS
 
+from src.prompt import (
+    GENERAL_CHAT_PROMPT,
+    RAG_CHAT_PROMPT
+)
+
+from src.config import GEMINI_MODELS
 
 load_dotenv()
 
 client = genai.Client(
     api_key=os.getenv("GEMINI_API_KEY")
 )
+
+
+# ===============================
+# General Chat / PDF Chat
+# ===============================
 
 def ask_gemini(question, context=""):
 
@@ -26,6 +35,15 @@ def ask_gemini(question, context=""):
         prompt = GENERAL_CHAT_PROMPT.format(
             question=question
         )
+
+    return ask_gemini_prompt(prompt)
+
+
+# ===============================
+# Generic Prompt
+# ===============================
+
+def ask_gemini_prompt(prompt):
 
     last_error = None
 
@@ -46,7 +64,6 @@ def ask_gemini(question, context=""):
 
             error_text = str(e)
 
-            # Retry only temporary errors
             if "503" in error_text or "429" in error_text:
 
                 print(f"{model_name} overloaded. Trying next model...")
@@ -55,7 +72,6 @@ def ask_gemini(question, context=""):
 
                 continue
 
-            # Permanent error
             return f"❌ {e}"
 
     return f"❌ All Gemini models failed.\n\n{last_error}"
