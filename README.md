@@ -1,5 +1,8 @@
 # 📚 AI Study Assistant
 
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://new-ai-study-assistant.streamlit.app)
+
+
 An AI-powered study companion that helps students and learners interact with PDF documents intelligently. The application can generate detailed study notes, flashcards, quizzes, and personalized study planners using **Gemini AI** and **RAG (Retrieval-Augmented Generation)**.
 
 ---
