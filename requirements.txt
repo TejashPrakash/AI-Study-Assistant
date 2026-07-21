@@ -6,6 +6,7 @@ sentence-transformers
 chromadb
 PyMuPDF
 pypdf
+langchain-text-splitters
 reportlab
 torch
 torchvision
