@@ -1,5 +1,6 @@
 import streamlit as st
 
+from src.ui.dashboard import render_dashboard
 from src.ui.session import initialize_session
 from src.ui.sidebar import render_sidebar
 from src.ui.chat import render_chat
@@ -8,6 +9,7 @@ from src.ui.flashcards import render_flashcards
 from src.ui.quiz import render_quiz
 from src.ui.planner import render_planner
 from src.services.pdf_service import process_pdf
+from src.ui.pdf_viewer import render_pdf_viewer
 
 # ===========================
 # Page Config
@@ -31,13 +33,26 @@ uploaded_file, feature = render_sidebar()
 # PDF Processing
 # ===========================
 
-pdf_text = process_pdf(uploaded_file)
+pdf_data = process_pdf(uploaded_file)
+
+pdf_text = None
+
+if pdf_data:
+    pdf_text = pdf_data["text"]
+
+# ===========================
+# Dashboard
+# ===========================
+
+if feature == "Dashboard":
+
+    render_dashboard(pdf_data)
 
 # ===========================
 # CHAT
 # ===========================
 
-if feature == "💬 Chat":
+if feature == "Chat":
 
     render_chat(
         uploaded_file,
@@ -48,7 +63,7 @@ if feature == "💬 Chat":
 # NOTES
 # ===========================
 
-elif feature == "📝 Notes":
+elif feature == "Notes":
 
     render_notes(
         uploaded_file,
@@ -59,7 +74,7 @@ elif feature == "📝 Notes":
 # FLASHCARDS
 # ===========================
 
-elif feature == "🧠 Flashcards":
+elif feature == "Flashcards":
 
     render_flashcards(
         uploaded_file,
@@ -70,7 +85,7 @@ elif feature == "🧠 Flashcards":
 # QUIZ
 # ===========================
 
-elif feature == "❓ Quiz":
+elif feature == "Quiz":
 
     render_quiz(
         uploaded_file,
@@ -81,7 +96,7 @@ elif feature == "❓ Quiz":
 # PLANNER
 # ===========================
 
-elif feature == "📅 Planner":
+elif feature == "Planner":
 
     render_planner(
         uploaded_file,

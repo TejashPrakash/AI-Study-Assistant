@@ -3,24 +3,42 @@ import time
 from src.retriever import retrieve_context
 from src.chatbot import ask_gemini
 
+# -----------------------
+# Simple Memory Cache
+# -----------------------
+
+CHAT_CACHE = {}
+
 
 def generate_chat_response(question):
-    """
-    Generate a response using RAG.
-
-    Returns:
-        answer,
-        documents,
-        distances,
-        found,
-        performance
-    """
 
     total_start = time.perf_counter()
 
-    # ------------------------
+    # -----------------------
+    # Return cached response
+    # -----------------------
+
+    if question in CHAT_CACHE:
+
+        cached = CHAT_CACHE[question]
+
+        cached["performance"] = {
+            "retrieval": 0,
+            "gemini": 0,
+            "total": 0
+        }
+
+        return (
+            cached["answer"],
+            cached["documents"],
+            cached["distances"],
+            cached["found"],
+            cached["performance"]
+        )
+
+    # -----------------------
     # Retrieval
-    # ------------------------
+    # -----------------------
 
     retrieval_start = time.perf_counter()
 
@@ -31,9 +49,9 @@ def generate_chat_response(question):
         3
     )
 
-    # ------------------------
+    # -----------------------
     # Gemini
-    # ------------------------
+    # -----------------------
 
     gemini_time = 0
 
@@ -64,6 +82,14 @@ def generate_chat_response(question):
         "retrieval": retrieval_time,
         "gemini": gemini_time,
         "total": total_time
+    }
+
+    CHAT_CACHE[question] = {
+        "answer": answer,
+        "documents": documents,
+        "distances": distances,
+        "found": found,
+        "performance": performance
     }
 
     return (

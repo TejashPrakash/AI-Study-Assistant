@@ -1,27 +1,103 @@
 import os
 import time
+
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 
 from src.prompt import (
     GENERAL_CHAT_PROMPT,
     RAG_CHAT_PROMPT
 )
 
-from src.config import GEMINI_MODELS
-
 load_dotenv()
+
+# ==========================================
+# Gemini Client
+# ==========================================
 
 client = genai.Client(
     api_key=os.getenv("GEMINI_API_KEY")
 )
 
+# ==========================================
+# Models
+# ==========================================
 
-# ===============================
-# General Chat / PDF Chat
-# ===============================
+CHAT_MODEL = "models/gemini-3.5-flash"
+
+FAST_MODEL = "models/gemini-3.1-flash-lite"
+
+ADVANCED_MODEL = "models/gemini-3.1-pro-preview"
+
+FALLBACK_MODELS = [
+    CHAT_MODEL,
+    FAST_MODEL,
+    "models/gemini-2.5-flash",
+    "models/gemini-2.0-flash"
+]
+
+
+# ==========================================
+# Internal Generator
+# ==========================================
+
+def _generate(
+    prompt,
+    models,
+    temperature=0.2,
+    max_tokens=2048
+):
+    """
+    Internal Gemini generator with fallback models.
+    """
+
+    last_error = None
+
+    for model in models:
+
+        try:
+
+            response = client.models.generate_content(
+                model=model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=temperature,
+                    max_output_tokens=max_tokens
+                )
+            )
+
+            return response.text
+
+        except Exception as e:
+
+            last_error = e
+
+            error = str(e)
+
+            if "429" in error or "503" in error:
+
+                print(f"{model} overloaded... trying next model")
+
+                time.sleep(1)
+
+                continue
+
+            print(error)
+
+            continue
+
+    return f"❌ All Gemini models failed.\n\n{last_error}"
+
+
+# ==========================================
+# Chat (General + PDF)
+# ==========================================
 
 def ask_gemini(question, context=""):
+    """
+    Chat with or without RAG context.
+    """
 
     if context.strip():
 
@@ -36,42 +112,67 @@ def ask_gemini(question, context=""):
             question=question
         )
 
-    return ask_gemini_prompt(prompt)
+    return _generate(
+        prompt=prompt,
+        models=[
+            CHAT_MODEL,
+            FAST_MODEL
+        ],
+        temperature=0.4,
+        max_tokens=2048
+    )
 
 
-# ===============================
+# ==========================================
 # Generic Prompt
-# ===============================
+# ==========================================
 
-def ask_gemini_prompt(prompt):
+def ask_gemini_prompt(
+    prompt,
+    fast=False,
+    advanced=False,
+    temperature=0.2,
+    max_tokens=2048
+):
+    """
+    Generic Gemini prompt.
 
-    last_error = None
+    Parameters
+    ----------
+    fast : bool
+        Uses Flash Lite
 
-    for model_name in GEMINI_MODELS:
+    advanced : bool
+        Uses Gemini Pro
 
-        try:
+    temperature : float
+        Creativity
 
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt
-            )
+    max_tokens : int
+        Maximum output tokens
+    """
 
-            return response.text
+    if advanced:
 
-        except Exception as e:
+        models = [
+            ADVANCED_MODEL,
+            CHAT_MODEL
+        ]
 
-            last_error = e
+    elif fast:
 
-            error_text = str(e)
+        models = [
+            FAST_MODEL,
+            CHAT_MODEL
+        ]
 
-            if "503" in error_text or "429" in error_text:
+    else:
 
-                print(f"{model_name} overloaded. Trying next model...")
+        models = FALLBACK_MODELS
 
-                time.sleep(1)
-
-                continue
-
-            return f"❌ {e}"
-
-    return f"❌ All Gemini models failed.\n\n{last_error}"
+    return _generate(
+        prompt=prompt,
+        models=models,
+        temperature=temperature,
+        max_tokens=max_tokens
+    )

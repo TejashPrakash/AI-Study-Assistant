@@ -1,3 +1,4 @@
+import fitz
 import streamlit as st
 
 from src.utils.pdf_loader import extract_text_from_pdf
@@ -16,11 +17,24 @@ def process_pdf(uploaded_file):
 
     pdf_hash = get_pdf_hash(uploaded_file)
 
+    uploaded_file.seek(0)
+
+    pdf = fitz.open(
+        stream=uploaded_file.read(),
+        filetype="pdf"
+    )
+
+    page_count = len(pdf)
+
+    uploaded_file.seek(0)
+
     pdf_text = extract_text_from_pdf(uploaded_file)
 
     chunks = []
 
-    if not pdf_exists(pdf_hash):
+    cached = pdf_exists(pdf_hash)
+
+    if not cached:
 
         with st.spinner("📄 Processing PDF..."):
 
@@ -41,7 +55,14 @@ def process_pdf(uploaded_file):
         chunks = split_text(pdf_text)
 
     st.sidebar.markdown("---")
-    st.sidebar.metric("Chunks", len(chunks))
-    st.sidebar.metric("Top K", TOP_K)
 
-    return pdf_text
+    st.sidebar.metric("📄 Pages", page_count)
+    st.sidebar.metric("🧩 Chunks", len(chunks))
+    st.sidebar.metric("🔍 Top K", TOP_K)
+
+    return {
+        "text": pdf_text,
+        "pages": page_count,
+        "chunks": len(chunks),
+        "cached": cached
+    }

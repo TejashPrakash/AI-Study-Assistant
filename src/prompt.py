@@ -28,24 +28,69 @@ Question:
 NOTES_PROMPT = """
 You are an expert study assistant.
 
-Using ONLY the provided study material, generate comprehensive study notes.
+Using the section summaries below, create COMPLETE, DETAILED, and EXAM-READY study notes for the subject and academic level indicated by the document content.
 
-Organize your response into these sections:
+The notes must be comprehensive enough that a learner can revise the entire document from them without reading the original PDF.
 
-# Chapter Summary
+Structure the notes as follows:
 
-# Important Concepts
+# Study Notes
 
-# Key Points
+## Main Topic
 
-# Formulae (if any)
+* Explain the concept clearly and thoroughly.
+* Include definitions, explanations, examples, and applications where relevant.
 
-# Important Definitions
+## Subtopic
 
-# Exam Tips
+* Write detailed bullet points.
+* Include important facts, formulas, reactions, properties, methods, and examples.
+* Explain processes step-by-step where necessary.
 
-Study Material:
+### Important Formulas / Equations
 
+* Write formulas and equations clearly using proper Unicode subscripts and superscripts where applicable.
+* Use symbols and notation appropriate for the subject.
+
+### Comparisons / Differences
+
+* Add comparison tables or bullet points where relevant.
+
+### Key Points for Revision
+
+* Include important facts, frequently tested concepts, and quick revision points.
+
+Rules:
+
+* Do NOT make the notes too short.
+* Do NOT only summarize; expand each topic into useful study material.
+* Adapt the depth and terminology to the subject and academic level of the document.
+* Preserve all important information from the section summaries.
+* Use clear, concise, and learner-friendly language.
+* For longer documents, generate proportionally detailed notes.
+
+Section Summaries:
+{context}
+"""
+
+SECTION_SUMMARY_PROMPT = """
+You are an expert study assistant.
+
+Read the following section of a document and create a DETAILED section summary.
+
+Include:
+
+* Main concepts and definitions
+* Explanations of processes or methods
+* Important formulas, reactions, or equations
+* Properties, characteristics, and examples
+* Applications and real-world relevance
+* Comparisons or differences between related concepts
+* Important facts for revision or exams
+
+Do not make the summary too short. Preserve as much important information as possible so it can later be expanded into complete study notes.
+
+Section:
 {context}
 """
 

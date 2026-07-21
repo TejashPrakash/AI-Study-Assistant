@@ -1,7 +1,7 @@
 import streamlit as st
 
 from src.services.flashcards_service import generate_flashcards
-
+from src.services.export_service import generate_flashcards_pdf
 
 def render_flashcards(uploaded_file, pdf_text):
 
@@ -70,3 +70,20 @@ def render_flashcards(uploaded_file, pdf_text):
                 st.session_state.current_card += 1
                 st.session_state.show_answer = False
                 st.rerun()
+    
+    if st.session_state.flashcards:
+
+        if st.button("📄 Export Flashcards"):
+
+            pdf = generate_flashcards_pdf(
+                st.session_state.flashcards
+            )
+
+            with open(pdf, "rb") as f:
+
+                st.download_button(
+                    "⬇ Download PDF",
+                    f,
+                    file_name="flashcards.pdf",
+                    mime="application/pdf"
+                )

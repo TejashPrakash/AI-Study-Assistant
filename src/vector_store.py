@@ -1,12 +1,16 @@
-import chromadb
 import uuid
-
 from functools import lru_cache
+
+import chromadb
 
 from src.config import DATABASE_PATH
 
 COLLECTION_NAME = "study_notes"
 
+
+# ===========================
+# Cached Collection
+# ===========================
 
 @lru_cache(maxsize=1)
 def get_collection():
@@ -16,9 +20,13 @@ def get_collection():
     )
 
     return client.get_or_create_collection(
-        COLLECTION_NAME
+        name=COLLECTION_NAME
     )
 
+
+# ===========================
+# Store Chunks
+# ===========================
 
 def store_chunks(chunks, embeddings):
 
@@ -36,13 +44,21 @@ def store_chunks(chunks, embeddings):
     )
 
 
-def search(query_embedding, n_results=3):
+# ===========================
+# Search
+# ===========================
+
+def search(query_embedding, n_results=5):
 
     collection = get_collection()
 
     results = collection.query(
         query_embeddings=[query_embedding.tolist()],
-        n_results=n_results
+        n_results=n_results,
+        include=[
+            "documents",
+            "distances"
+        ]
     )
 
     return {

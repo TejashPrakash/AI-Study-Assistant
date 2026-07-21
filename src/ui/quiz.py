@@ -1,6 +1,7 @@
 import streamlit as st
 
 from src.services.quiz_service import generate_quiz
+from src.services.export_service import generate_quiz_pdf
 
 def render_quiz(uploaded_file, pdf_text):
 
@@ -133,3 +134,20 @@ def render_quiz(uploaded_file, pdf_text):
                 st.session_state.quiz_finished = False
 
                 st.rerun()
+        
+        if st.session_state.quiz:
+
+            if st.button("📄 Export Quiz"):
+
+                pdf = generate_quiz_pdf(
+                    st.session_state.quiz
+                )
+
+                with open(pdf, "rb") as f:
+
+                    st.download_button(
+                        "⬇ Download PDF",
+                        f,
+                        file_name="quiz.pdf",
+                        mime="application/pdf"
+                    )

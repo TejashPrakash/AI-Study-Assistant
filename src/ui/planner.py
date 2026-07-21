@@ -1,5 +1,6 @@
 import streamlit as st
 from src.services.planner_service import generate_planner
+from src.services.export_service import generate_planner_pdf
 
 def render_planner(uploaded_file, pdf_text):
 
@@ -71,3 +72,20 @@ def render_planner(uploaded_file, pdf_text):
                 file_name="study_plan.md",
                 mime="text/markdown"
             )
+        
+        if st.session_state.planner:
+
+            if st.button("📄 Export Planner"):
+
+                pdf = generate_planner_pdf(
+                    st.session_state.planner
+                )
+
+                with open(pdf, "rb") as f:
+
+                    st.download_button(
+                        "⬇ Download PDF",
+                        f,
+                        file_name="study_planner.pdf",
+                        mime="application/pdf"
+                    )

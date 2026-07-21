@@ -1,6 +1,7 @@
 import streamlit as st
 
 from src.services.notes_service import generate_notes
+from src.services.export_service import generate_notes_pdf
 
 
 def render_notes(uploaded_file, pdf_text):
@@ -23,9 +24,16 @@ def render_notes(uploaded_file, pdf_text):
 
         st.markdown(st.session_state.notes)
 
-        st.download_button(
-            "⬇ Download Notes",
-            st.session_state.notes,
-            file_name="study_notes.md",
-            mime="text/markdown"
+        pdf = generate_notes_pdf(
+            st.session_state.notes
         )
+
+        with open(pdf, "rb") as f:
+
+            st.download_button(
+                "📄 Download Notes as PDF",
+                f,
+                file_name="study_notes.pdf",
+                mime="application/pdf",
+                use_container_width=True
+            )
