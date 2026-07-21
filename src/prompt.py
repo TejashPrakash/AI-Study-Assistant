@@ -32,6 +32,14 @@ Using the section summaries below, create COMPLETE, DETAILED, and EXAM-READY stu
 
 The notes must be comprehensive enough that a learner can revise the entire document from them without reading the original PDF.
 
+IMPORTANT:
+
+* You must cover EVERY major topic and subtopic mentioned in the section summaries.
+* Do not stop after writing only an introduction or overview.
+* Continue writing until all important concepts, formulas, reactions, examples, applications, and revision points are included.
+* The notes should be long and detailed, suitable for exam preparation.
+
+
 Structure the notes as follows:
 
 # Study Notes
@@ -68,6 +76,15 @@ Rules:
 * Preserve all important information from the section summaries.
 * Use clear, concise, and learner-friendly language.
 * For longer documents, generate proportionally detailed notes.
+
+Formatting rules:
+
+* Use proper Markdown headings (#, ##, ###).
+* Put each bullet point on a new line.
+* Do not return escaped Markdown characters like * or \n.
+* Leave a blank line between headings and paragraphs.
+* Write formulas and chemical equations on separate lines.
+
 
 Section Summaries:
 {context}

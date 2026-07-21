@@ -14,19 +14,36 @@ def render_notes(uploaded_file, pdf_text):
 
         return
 
+    # Generate Notes
     if st.button("📝 Generate Notes"):
 
         with st.spinner("Generating Notes..."):
 
             st.session_state.notes = generate_notes(pdf_text)
 
+    # Display Notes
     if st.session_state.notes:
 
-        st.markdown(st.session_state.notes)
+        # Clean formatting issues
+        notes = st.session_state.notes
 
-        pdf = generate_notes_pdf(
-            st.session_state.notes
-        )
+        # Convert escaped newlines into actual new lines
+        notes = notes.replace("\\n", "")
+
+        # Remove escaped markdown characters
+        notes = notes.replace("\\*", "*")
+
+        # Ensure proper spacing between headings and content
+        notes = notes.replace("## ", "## ")
+        notes = notes.replace("### ", "### ")
+
+        # Render properly formatted notes
+        st.markdown(notes, unsafe_allow_html=True)
+
+        st.divider()
+
+        # Export as PDF
+        pdf = generate_notes_pdf(notes)
 
         with open(pdf, "rb") as f:
 
